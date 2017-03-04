@@ -37,6 +37,21 @@ class SQLHandler {
         }
     }
 
+    //метод, добавляющий новый сайт в таблицу Sites (it is not necessary but let it be)
+    //input data must contain domain name (like lenta.ru) or URL (like http://lenta.ru)
+    static void setNewSite(String siteName) {
+        // если вдруг siteName это ссылка, а не имя домена, то ссылка обрезается до имени домена
+        if (siteName.startsWith("http")){
+            String[] splittedUrl = siteName.split("/");
+            siteName = splittedUrl[2];
+        }
+        try {
+            int a = stmt.executeUpdate("INSERT Sites SET Name = '" + siteName + "'");
+        } catch (SQLException e) {
+            System.out.println("Ошибка добавления записи в таблицу Sites");
+        }
+    }
+
     // метод, который загружает из базы все страницы, у которых поле LastScanDate = null
     static LinkedList<String> getPagesNotScanned() {
         LinkedList<String> pages = new LinkedList<>();
@@ -68,7 +83,13 @@ class SQLHandler {
     }
 
     //метод, который добавляет в таблицу Pages строку с URL равным http://<имя_сайта>/robots.txt и LastScanDate равным null
+    //input data must contain domain name (like lenta.ru) or URL (like http://lenta.ru)
     static void setRobotsPage(String siteName) {
+        // если вдруг siteName это ссылка, а не имя домена, то ссылка обрезается до имени домена
+        if (siteName.startsWith("http")){
+            String[] splittedUrl = siteName.split("/");
+            siteName = splittedUrl[2];
+        }
         Date date = new Date();
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
         System.out.println(dateFormat.format(date));
@@ -83,4 +104,5 @@ class SQLHandler {
             System.out.println("Ошибка добавления записи в таблицу Pages");
         }
     }
+
 }
