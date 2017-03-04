@@ -49,4 +49,19 @@ class SQLHandler {
         }
         return pages;
     }
+
+    //метод, который просматривает таблицу Sites и ищет те сайты, у которых совсем нет сопоставлений в таблице Pages
+    static LinkedList<String> searchSitesWithNoPages (){
+        LinkedList<String> sites = new LinkedList<>();
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT Sites.name FROM Sites LEFT JOIN (SELECT DISTINCT SiteID FROM Pages) as Pages ON Sites.id = Pages.SiteID WHERE Pages.SiteID IS NULL");
+            while (rs.next()){
+                sites.add(rs.getString(1));
+            }
+            return sites;
+        } catch (SQLException e) {
+            System.out.println("Ошибка обработки запроса к таблице Sites");
+        }
+        return sites;
+    }
 }
