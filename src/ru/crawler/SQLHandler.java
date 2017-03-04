@@ -1,7 +1,9 @@
 package ru.crawler;
 
 import java.sql.*;
+import java.text.SimpleDateFormat;
 import java.util.LinkedList;
+import java.util.Date;
 
 /**
  * Created by Alexander Sychev on 02.03.2017.
@@ -36,11 +38,11 @@ class SQLHandler {
     }
 
     // метод, который загружает из базы все страницы, у которых поле LastScanDate = null
-    static LinkedList<String> getPagesNotScanned (){
+    static LinkedList<String> getPagesNotScanned() {
         LinkedList<String> pages = new LinkedList<>();
         try {
             ResultSet rs = stmt.executeQuery("SELECT Url FROM Pages WHERE LastScanDate IS NULL");
-            while (rs.next()){
+            while (rs.next()) {
                 pages.add(rs.getString(1));
             }
             return pages;
@@ -51,11 +53,11 @@ class SQLHandler {
     }
 
     //метод, который просматривает таблицу Sites и ищет те сайты, у которых совсем нет сопоставлений в таблице Pages
-    static LinkedList<String> searchSitesWithNoPages (){
+    static LinkedList<String> getSitesWithNoPages() {
         LinkedList<String> sites = new LinkedList<>();
         try {
             ResultSet rs = stmt.executeQuery("SELECT Sites.name FROM Sites LEFT JOIN (SELECT DISTINCT SiteID FROM Pages) as Pages ON Sites.id = Pages.SiteID WHERE Pages.SiteID IS NULL");
-            while (rs.next()){
+            while (rs.next()) {
                 sites.add(rs.getString(1));
             }
             return sites;
@@ -63,5 +65,22 @@ class SQLHandler {
             System.out.println("Ошибка обработки запроса к таблице Sites");
         }
         return sites;
+    }
+
+    //метод, который добавляет в таблицу Pages строку с URL равным http://<имя_сайта>/robots.txt и LastScanDate равным null
+    static void setRobotsPage(String siteName) {
+        Date date = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
+        System.out.println(dateFormat.format(date));
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT id FROM Sites WHERE name = '" + siteName + "';");
+            if (rs.next()) {
+                int siteID = rs.getInt(1);
+                System.out.println(siteID);
+                int a = stmt.executeUpdate("INSERT Pages SET SiteID = '" + siteID + "', FoundDateTime = '" + dateFormat.format(date) + "', Url = 'http://" + siteName + "/robots.txt'");
+            } else System.out.println("Имя сайта не найдено в таблице сайтов");
+        } catch (SQLException e) {
+            System.out.println("Ошибка добавления записи в таблицу Pages");
+        }
     }
 }
