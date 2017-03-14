@@ -41,7 +41,7 @@ class SQLHandler {
     //input data must contain domain name (like lenta.ru) or URL (like http://lenta.ru)
     static void setNewSite(String siteName) {
         // если вдруг siteName это ссылка, а не имя домена, то ссылка обрезается до имени домена
-        if (siteName.startsWith("http")){
+        if (siteName.startsWith("http")) {
             String[] splittedUrl = siteName.split("/");
             siteName = splittedUrl[2];
         }
@@ -67,6 +67,22 @@ class SQLHandler {
         return pages;
     }
 
+    //метод который выдаёт весь список Pages
+    static LinkedList<String> getAllPages() {
+        LinkedList<String> pages = new LinkedList<>();
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT Url FROM Pages");
+            while (rs.next()) {
+                pages.add(rs.getString(1));
+            }
+            return pages;
+        } catch (SQLException e) {
+            System.out.println("Ошибка обработки запроса к таблице Pages");
+        }
+        return pages;
+    }
+
+
     //метод, который просматривает таблицу Sites и ищет те сайты, у которых совсем нет сопоставлений в таблице Pages
     static LinkedList<String> getSitesWithNoPages() {
         LinkedList<String> sites = new LinkedList<>();
@@ -86,7 +102,7 @@ class SQLHandler {
     //input data must contain domain name (like lenta.ru) or URL (like http://lenta.ru)
     static void setRobotsPage(String siteName) {
         // если вдруг siteName это ссылка, а не имя домена, то ссылка обрезается до имени домена
-        if (siteName.startsWith("http")){
+        if (siteName.startsWith("http")) {
             String[] splittedUrl = siteName.split("/");
             siteName = splittedUrl[2];
         }
@@ -102,6 +118,41 @@ class SQLHandler {
             } else System.out.println("Имя сайта не найдено в таблице сайтов");
         } catch (SQLException e) {
             System.out.println("Ошибка добавления записи в таблицу Pages");
+        }
+    }
+
+
+    //добавляет новую страницу в таблицу Pages
+    static void addNewPage(String pageURL) {
+        int siteID = 0; //переменная для определения ID сайта
+        try {
+            ResultSet rs = stmt.executeQuery("SELECT * FROM Sites;");
+            while (rs.next()) {
+                String siteName = rs.getString(2);
+                if (pageURL.contains(siteName)) {
+                    siteID = rs.getInt(1);
+                    break;
+                }
+            }
+            if (siteID != 0) {
+                //дата для добавления в столбец FoundDateTime
+                Date date = new Date();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
+                int a = stmt.executeUpdate("INSERT Pages SET SiteID = '" + siteID + "', FoundDateTime = '" + dateFormat.format(date) + "', Url = '" + pageURL + "'");
+            } else System.out.println("Не найден сайт для данной ссылки, страница не добавлена");
+        } catch (SQLException e) {
+            System.out.println("Ошибка добавления записи в таблицу Pages");
+        }
+    }
+
+
+    //добавляет новую статистику в таблицу PersonPageRank
+    //получает PersonID, PageID, Rank
+    static void addPersonPageRank(int personID, int pageID, int rank) {
+        try {
+            int a = stmt.executeUpdate("INSERT PersonPageRank SET PersonID = '" + personID + "', PageID = '" + pageID + "', Rank = '" + rank + "'");
+        } catch (SQLException e) {
+            System.out.println("Ошибка добавления записи в таблицу PersonPageRank");
         }
     }
 
